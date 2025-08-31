@@ -77,22 +77,42 @@ ______
 ```nix
 { config, pkgs, lib, ... }:
 let
-  prettierCustomized = import /home/USER/git/hub/nix-utilities/prettier-with-plugins {
+  prettier-with-plugins = import /home/USER/git/hub/nix-utilities/prettier-with-plugins {
     inherit lib pkgs;
-
-    ## Official
-    enablePhp = true;
-    enableRuby = true;
-    enableXml = true;
-
-    ## Third-party
-    enableAstro = true;
-    enableRust = true;
-    enableSh = true;
-    enableSolidity = true;
-    enableSql = true;
-    enableToml = true;
   };
+
+  prettierCustomized = prettier-with-plugins.prettier {
+    enabled = with prettier-with-plugins.plugins; [
+      ## Third-party
+      prettier-plugin-apex
+      prettier-plugin-astro
+      prettier-plugin-elm
+      prettier-plugin-erb
+      prettier-plugin-gherkin
+      prettier-plugin-glsl
+      prettier-plugin-go-template
+      prettier-plugin-jinja-template
+      prettier-plugin-kotlin
+      prettier-plugin-motoko
+      prettier-plugin-prisma
+      prettier-plugin-properties
+      prettier-plugin-rust
+      prettier-plugin-sh
+      prettier-plugin-solidity
+      prettier-plugin-sql
+      prettier-plugin-sql-cst
+      prettier-plugin-svelte
+      prettier-plugin-toml
+    ]
+    ++ (with prettier-with-plugins; [
+      ## Official
+      plugins."@prettier/plugin-php"
+      plugins."@prettier/plugin-pug"
+      plugins."@prettier/plugin-ruby"
+      plugins."@prettier/plugin-xml"
+      ## Third-party
+      plugins."@stedi/prettier-plugin-jsonata"
+    ]);
 in
 {
   home-manager.users."yourName".config.programs.vim {
@@ -124,6 +144,30 @@ ______
 
 This repository may not be feature complete and/or fully functional, Pull
 Requests that add features or fix bugs are certainly welcomed.
+
+### TODO: figure out how Nginx is more broken than other NodeJS stuff
+
+Adding `prettier-plugin-nginx` to `enabled` configuration...
+
+```diff
+   prettierCustomized = prettier-with-plugins.prettier {
+     enabled = with prettier-with-plugins.plugins; [
++      prettier-plugin-nginx
+```
+
+...  and rebuild results in following error;
+
+```
+Executing versionCheckPhase
+Did not find version 3.5.3 in the output of the command /nix/store/<HASH>-prettier-3.5.3/bin/prettier --help
+[error] Cannot find module 'prettier/doc'
+[error] Require stack:
+[error] - {{storeDir}}/lib/node_modules/prettier-plugin-nginx/dist/index.js
+Did not find version 3.5.3 in the output of the command /nix/store/<HASH>-prettier-3.5.3/bin/prettier --version
+[error] Cannot find module 'prettier/doc'
+[error] Require stack:
+[error] - {{storeDir}}/lib/node_modules/prettier-plugin-nginx/dist/index.js
+```
 
 
 ______
