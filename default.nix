@@ -26,6 +26,8 @@ in
   prettier =
     { enabled ? [] }:
     ((prettier.override { }).overrideAttrs{
+      buildInputs = prettier.buildInputs ++ [pkgs.jq];
+
       nativeBuildInputs = prettier.nativeBuildInputs ++ enabled;
 
       postInstall =
@@ -39,10 +41,21 @@ in
               plugin:
               utils.directoryOf plugin
             ) enabled);
+
+          package-json.exports = builtins.listToAttrs (builtins.map (
+            plugin:
+            {
+              name = plugin.packageName;
+              value = utils.entryPointOf plugin;
+            }
+          ) enabled);
         in
         if builtins.length enabled > 0 then
           ''
             wrapProgram $out/bin/prettier --add-flags "${flags}" --prefix NODE_PATH ":" "${NODE_PATH}";
+
+            jq '. * ${builtins.toJSON package-json}' $out/package.json > $out/merged-package.json;
+            mv $out/merged-package.json $out/package.json;
 
             mkdir -p $out/node_modules;
           ''
