@@ -31,10 +31,18 @@ in
       postInstall =
         let
           scopeOf = plugin: builtins.head (lib.strings.split "/" plugin.packageName);
+
+          flags = builtins.concatStringsSep " " (utils.cliFlagsFor enabled);
+
+          NODE_PATH =
+            builtins.concatStringsSep ":" (builtins.map (
+              plugin:
+              utils.directoryOf plugin
+            ) enabled);
         in
         if builtins.length enabled > 0 then
           ''
-            wrapProgram $out/bin/prettier --add-flags "${builtins.concatStringsSep " " (utils.cliFlagsFor enabled)}";
+            wrapProgram $out/bin/prettier --add-flags "${flags}" --prefix NODE_PATH ":" "${NODE_PATH}";
 
             mkdir -p $out/node_modules;
           ''
