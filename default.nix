@@ -29,10 +29,33 @@ in
       nativeBuildInputs = prettier.nativeBuildInputs ++ enabled;
 
       postInstall =
+        let
+          scopeOf = plugin: builtins.head (lib.strings.split "/" plugin.packageName);
+        in
         if builtins.length enabled > 0 then
           ''
             wrapProgram $out/bin/prettier --add-flags "${builtins.concatStringsSep " " (utils.cliFlagsFor enabled)}";
+
+            mkdir -p $out/node_modules;
           ''
+          + builtins.concatStringsSep "\n" (
+            builtins.map (
+              plugin:
+              let
+                pluginDirectory = utils.directoryOf plugin;
+                pluginScope = scopeOf plugin;
+              in
+              if lib.strings.hasPrefix "@" plugin.packageName then
+                ''
+                  mkdir -p $out/node_modules/${pluginScope};
+                  ln -s "${pluginDirectory}" $out/node_modules/${pluginScope};
+                ''
+              else
+                ''
+                  ln -s "${pluginDirectory}" $out/node_modules/;
+                ''
+            )
+          enabled)
         else
           "";
     });
